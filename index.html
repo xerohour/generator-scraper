@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator Scraper &mdash; clean zips, binaries intact</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0f1220; color: #e8eaf2;
+         max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.5; }
+  h1 { font-size: 1.6em; margin-bottom: 0; }
+  .sub { color: #9aa0b8; margin-top: 4px; }
+  section { background: #171b2e; border: 1px solid #262c4a; border-radius: 10px;
+            padding: 16px; margin-top: 16px; }
+  h2 { font-size: 1.1em; margin: 0 0 8px; }
+  a.bm { display: inline-block; background: #2b3358; color: #fff; padding: 8px 14px;
+         border-radius: 8px; text-decoration: none; border: 1px dashed #5a6598; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 110px; background: #0c0f1c;
+             color: #cfd4ea; border: 1px solid #2a3050; border-radius: 8px; padding: 8px;
+             font: 12px monospace; }
+  button { background: #3b6cff; color: #fff; border: 0; border-radius: 8px;
+           padding: 10px 18px; font-size: 1em; cursor: pointer; }
+  button:disabled { background: #2a3050; color: #777da0; cursor: default; }
+  progress { width: 100%; margin-top: 10px; }
+  #status { margin-top: 8px; color: #b9c0da; }
+  #errors { color: #ff9a9a; white-space: pre-wrap; font: 12px monospace; }
+  #summary { color: #9fe6a0; margin-left: 10px; }
+  .note { color: #8b91ad; font-size: 0.9em; }
+  ol { padding-left: 20px; }
+  code { background: #0c0f1c; padding: 1px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Generator Scraper</h1>
+<p class="sub">Self-hosted scrape-to-zip for public Perchance generators. Every file is
+downloaded as raw bytes and size-checked against the manifest &mdash; binaries arrive intact,
+no more corrupted PNGs, audio, or WASM in your zips.</p>
+
+<section>
+  <h2>1. Copy the file list</h2>
+  <p>Drag this to your bookmarks bar: <a class="bm" href="javascript:(async%20()%20%3D%3E%20%7B%20try%20%7B%20const%20slug%20%3D%20location.pathname.slice(1).split(%2F%5B%3F%23%5D%2F)%5B0%5D.split(%27%2F%27)%5B0%5D%3B%20if%20(!slug)%20throw%20new%20Error(%27open%20a%20generator%20page%20first%27)%3B%20const%20d%20%3D%20await%20fetch(%27%2Fapi%2FgetGeneratorPageData%27%2C%20%7B%20method%3A%20%27POST%27%2C%20headers%3A%20%7B%20%27Content-Type%27%3A%20%27application%2Fjson%27%20%7D%2C%20body%3A%20JSON.stringify(%7B%20generatorName%3A%20slug%20%7D)%2C%20%7D).then((r)%20%3D%3E%20%7B%20if%20(!r.ok)%20throw%20new%20Error(%27page%20data%20HTTP%20%27%20%2B%20r.status)%3B%20return%20r.json()%3B%20%7D)%3B%20const%20g%20%3D%20d.generator%20%7C%7C%20%7B%7D%3B%20const%20out%20%3D%20%7B%20name%3A%20slug%2C%20main%3A%20g.modelText%20%7C%7C%20%27%27%2C%20page%3A%20g.outputTemplate%20%7C%7C%20%27%27%2C%20imports%3A%20g.imports%20%7C%7C%20%5B%5D%2C%20manifest%3A%20g.srcManifest%20%7C%7C%20%7B%7D%2C%20%7D%3B%20const%20text%20%3D%20JSON.stringify(out)%3B%20let%20copied%20%3D%20false%3B%20try%20%7B%20await%20navigator.clipboard.writeText(text)%3B%20copied%20%3D%20true%3B%20%7D%20catch%20(e)%20%7B%20%2F*%20fall%20through%20to%20manual%20copy%20*%2F%20%7D%20if%20(!copied)%20%7B%20const%20w%20%3D%20window.open(%27%27%2C%20%27_blank%27%2C%20%27width%3D640%2Cheight%3D640%27)%3B%20if%20(!w)%20throw%20new%20Error(%27clipboard%20blocked%20and%20popups%20blocked%20%E2%80%94%20allow%20one%20of%20them%20and%20retry%27)%3B%20w.document.title%20%3D%20%27Copy%20scrape%20data%27%3B%20const%20ta%20%3D%20w.document.createElement(%27textarea%27)%3B%20ta.style.cssText%20%3D%20%27width%3A98%25%3Bheight%3A94vh%3Bfont%3A12px%20monospace%27%3B%20ta.value%20%3D%20text%3B%20w.document.body.appendChild(ta)%3B%20ta.focus()%3B%20ta.select()%3B%20alert(%27Clipboard%20was%20blocked%20%E2%80%94%20copy%20the%20text%20from%20the%20new%20tab%2C%20then%20paste%20it%20into%20the%20scraper.%27)%3B%20return%3B%20%7D%20alert(%27Scrape%20data%20copied%20(%27%20%2B%20Object.keys(out.manifest).length%20%2B%20%27%20files).%20Paste%20it%20into%20the%20scraper%20page.%27)%3B%20%7D%20catch%20(e)%20%7B%20alert(%27Scraper%20bookmarklet%20failed%3A%20%27%20%2B%20e.message)%3B%20%7D%20%7D)()%3B">&#129522; Scrape data</a></p>
+  <ol>
+    <li>Open the generator&rsquo;s page on perchance.org</li>
+    <li>Click the <b>Scrape data</b> bookmark &mdash; it copies the generator&rsquo;s file list</li>
+    <li>Paste it in step 2 below</li>
+  </ol>
+  <p class="note">Why the extra step? Perchance only lets its own pages request a
+  generator&rsquo;s file list, so this page can&rsquo;t fetch it directly. The bookmarklet runs
+  on the generator&rsquo;s page where it&rsquo;s allowed; this page then does the downloading
+  and zipping. If the clipboard is blocked, the bookmarklet opens a tab to copy from manually.</p>
+</section>
+
+<section>
+  <h2>2. Paste the file list</h2>
+  <textarea id="paste" placeholder="Paste the JSON copied by the bookmarklet&hellip;"></textarea>
+  <div style="margin-top:8px"><button id="loadBtn">Load files</button><span id="summary"></span></div>
+</section>
+
+<section>
+  <h2>3. Download the zip</h2>
+  <button id="dlBtn" disabled>Download .zip</button>
+  <progress id="prog" value="0" max="100" hidden></progress>
+  <div id="status"></div>
+  <pre id="errors"></pre>
+  <p class="note">The zip mirrors the classic layout: <code>main.pjs</code>,
+  <code>index.html</code>, <code>src/&hellip;</code>. If any file fails its size check,
+  no zip is built and the offenders are listed above.</p>
+</section>
+
+<script src="zip.js"></script>
+<script src="scraper-core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
